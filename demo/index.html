@@ -3,307 +3,750 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FTAI — Fault Tree AI · Demo</title>
+<title>FTAI — Fault Tree AI · InnoFactury</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-:root{--bg:#0f1117;--bg2:#1a1d27;--bg3:#22263a;--border:#2e3248;--purple:#7c6af7;--purple2:#9d8ff9;--teal:#1ec8a0;--amber:#f5a623;--red:#e84545;--green:#22c55e;--text:#e2e8f0;--muted:#8892aa;--radius:10px;--font:'Segoe UI',system-ui,sans-serif}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh}
-#app{max-width:480px;margin:0 auto;padding:0 0 80px}
-.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 20px;position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px}
-.header-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--purple),var(--teal));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
-.header h1{font-size:16px;font-weight:600}
-.header span{font-size:11px;color:var(--muted);display:block;margin-top:1px}
-.demo-badge{font-size:10px;background:rgba(232,69,69,.15);color:var(--red);border:1px solid rgba(232,69,69,.3);padding:2px 8px;border-radius:10px;margin-left:auto}
-#config-banner{background:#1a1410;border:1px solid #5a3a10;border-radius:var(--radius);margin:16px 16px 0;padding:14px 16px}
-#config-banner h3{color:var(--amber);font-size:13px;margin-bottom:8px}
-.cfg-row{display:flex;gap:8px;margin-bottom:6px}
-.cfg-input{flex:1;background:#0f1117;border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:12px;font-family:monospace}
-.cfg-btn{background:var(--amber);color:#000;border:none;border-radius:6px;padding:8px 14px;font-weight:600;font-size:12px;cursor:pointer;white-space:nowrap}
-.cfg-btn:hover{opacity:.88}
-.step-nav{display:flex;gap:0;margin:16px 16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)}
-.step-btn{flex:1;padding:10px 4px;background:var(--bg2);border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;transition:all .15s;border-right:1px solid var(--border)}
-.step-btn:last-child{border-right:none}
-.step-btn.active{background:var(--purple);color:#fff;font-weight:600}
-.step-btn.done{color:var(--teal)}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin:12px 16px;padding:16px}
-.card-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
-.asset-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:all .15s}
-.asset-item:hover{border-color:var(--purple)}
-.asset-item.selected{border-color:var(--purple);background:rgba(124,106,247,0.08)}
-.asset-icon{width:38px;height:38px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+:root{
+  --bg:#07080c;--bg2:#0e1018;--bg3:#151820;--bg4:#1c2030;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);--border3:rgba(255,255,255,0.18);
+  --teal:#00d4a0;--teal-dim:rgba(0,212,160,0.12);--teal-border:rgba(0,212,160,0.3);
+  --amber:#f0a500;--amber-dim:rgba(240,165,0,0.1);--amber-border:rgba(240,165,0,0.3);
+  --purple:#9d8ff9;--purple-dim:rgba(157,143,249,0.1);--purple-border:rgba(157,143,249,0.3);
+  --red:#ff4d4d;--green:#00d4a0;
+  --text:#dde1eb;--text2:#8b92a8;--text3:#4a5068;
+  --mono:'DM Mono',monospace;--display:'Syne',sans-serif;--body:'Inter',sans-serif;
+  --r:4px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:14px;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 20% 20%,rgba(0,212,160,0.03) 0%,transparent 50%),radial-gradient(circle at 80% 80%,rgba(157,143,249,0.03) 0%,transparent 50%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+
+#shell{max-width:540px;margin:0 auto;padding-bottom:80px;position:relative;z-index:1}
+
+/* ── Top bar ── */
+.topbar{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;position:sticky;top:0;z-index:60;background:linear-gradient(var(--bg) 75%,transparent);border-bottom:1px solid transparent}
+.logotype{display:flex;align-items:center;gap:10px}
+.logotype-mark{width:34px;height:34px;border:1.5px solid var(--teal);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--teal);letter-spacing:-.5px;flex-shrink:0;position:relative}
+.logotype-mark::after{content:'';position:absolute;top:-1px;right:-1px;width:6px;height:6px;background:var(--teal);opacity:.6}
+.logotype-text{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:-.4px;line-height:1}
+.logotype-sub{font-size:9px;color:var(--text2);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.status-pill{display:flex;align-items:center;gap:5px;font-size:9px;font-family:var(--mono);letter-spacing:.05em;padding:4px 9px;border:1px solid var(--border2);color:var(--text3);text-transform:uppercase}
+.status-pill.connected{border-color:var(--teal-border);color:var(--teal)}
+.status-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── Login screen ── */
+.login-screen{padding:20px}
+.login-hero{text-align:center;padding:32px 0 28px}
+.login-hero-mark{width:56px;height:56px;border:1.5px solid var(--teal);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-family:var(--mono);font-size:18px;color:var(--teal);position:relative}
+.login-hero-mark::before{content:'';position:absolute;inset:-6px;border:1px solid var(--teal-border)}
+.login-hero h1{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:8px}
+.login-hero p{font-size:12px;color:var(--text2);font-family:var(--mono);line-height:1.6;max-width:320px;margin:0 auto}
+.login-card{background:var(--bg2);border:1px solid var(--border2);padding:20px;margin-bottom:10px}
+.login-card-title{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.login-card-title::before{content:'';width:14px;height:1px;background:var(--teal)}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:10px;font-family:var(--mono);color:var(--text2);margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase}
+.field input{width:100%;background:var(--bg3);border:1px solid var(--border);padding:10px 12px;color:var(--text);font-size:12px;font-family:var(--mono);outline:none;transition:border-color .15s;border-radius:var(--r)}
+.field input:focus{border-color:var(--teal-border)}
+.field input::placeholder{color:var(--text3)}
+.field-row{display:flex;gap:8px;margin-bottom:10px}
+.field-row .field{flex:1;margin-bottom:0}
+.btn-main{width:100%;padding:12px;background:var(--teal);color:#000;border:none;font-family:var(--mono);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;letter-spacing:.06em;text-transform:uppercase;border-radius:var(--r)}
+.btn-main:hover{background:#00e8b0}
+.btn-main:disabled{opacity:.35;cursor:not-allowed}
+.btn-sec{width:100%;padding:10px;background:transparent;border:1px solid var(--border2);color:var(--text2);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .15s;letter-spacing:.05em;text-transform:uppercase;margin-top:6px;border-radius:var(--r)}
+.btn-sec:hover{border-color:var(--border3);color:var(--text)}
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;font-size:10px;font-family:var(--mono);color:var(--text3)}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.features-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.feature-item{background:var(--bg2);border:1px solid var(--border);padding:12px;border-radius:var(--r)}
+.feature-icon{font-size:16px;margin-bottom:6px;font-family:var(--mono);color:var(--teal)}
+.feature-name{font-size:11px;font-weight:500;margin-bottom:2px}
+.feature-desc{font-size:10px;color:var(--text2);line-height:1.4}
+.innofactury-badge{text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.innofactury-badge span{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.06em}
+.innofactury-badge strong{color:var(--text2)}
+
+/* ── Nav steps ── */
+.step-nav{display:flex;margin:0;border-bottom:1px solid var(--border);padding:0 20px}
+.step-btn{flex:1;padding:11px 4px;background:transparent;border:none;color:var(--text3);font-family:var(--mono);font-size:9px;cursor:pointer;text-align:center;letter-spacing:.07em;text-transform:uppercase;border-bottom:1.5px solid transparent;transition:all .15s;position:relative}
+.step-btn.active{color:var(--teal);border-bottom-color:var(--teal)}
+.step-btn.done{color:var(--text2)}
+.step-btn.done::after{content:'✓';position:absolute;top:6px;right:6px;font-size:8px;color:var(--teal)}
+
+/* ── Section cards ── */
+.section{margin:14px 20px 0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.section-head{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.section-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--text2)}
+.section-body{padding:14px 16px}
+
+/* ── Asset list ── */
+.asset-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:all .15s;border-radius:var(--r);background:var(--bg3)}
+.asset-item:hover{border-color:var(--border2);background:var(--bg4)}
+.asset-item.sel{border-color:var(--teal-border);background:var(--teal-dim)}
+.asset-monogram{width:34px;height:34px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--text2);flex-shrink:0;border-radius:var(--r)}
+.asset-item.sel .asset-monogram{border-color:var(--teal-border);color:var(--teal)}
 .asset-info{flex:1;min-width:0}
-.asset-name{font-weight:600;font-size:13px}
-.asset-sub{font-size:11px;color:var(--muted);margin-top:2px}
-.asset-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(30,200,160,.12);color:var(--teal);border:1px solid rgba(30,200,160,.2);white-space:nowrap}
-.symptom-group{margin-bottom:14px}
-.symptom-group-title{font-size:11px;color:var(--purple2);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.symptom-group-title::after{content:'';flex:1;height:1px;background:var(--border)}
-.symptom-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all .15s}
-.symptom-chip:hover{border-color:var(--purple)}
-.symptom-chip.selected{border-color:var(--amber);background:rgba(245,166,35,.06)}
-.sym-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:all .15s}
-.symptom-chip.selected .sym-dot{background:var(--amber);border-color:var(--amber)}
-.sym-auto{font-size:10px;padding:1px 6px;background:rgba(34,197,94,.1);color:var(--green);border-radius:10px;margin-left:auto;border:1px solid rgba(34,197,94,.2);white-space:nowrap}
-.result-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-.confidence-ring{width:52px;height:52px;flex-shrink:0}
-.result-meta h3{font-size:15px;font-weight:700}
-.result-meta p{font-size:11px;color:var(--muted);margin-top:2px}
-.candidate{border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden;cursor:pointer;transition:border-color .15s}
-.candidate:hover{border-color:var(--purple)}
-.candidate.selected{border-color:var(--teal)}
-.cand-head{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg3)}
-.cand-rank{width:24px;height:24px;border-radius:50%;background:var(--purple);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.cand-rank.rank-1{background:var(--amber)}
-.cand-rank.rank-3{background:var(--muted)}
-.cand-title{flex:1;font-weight:600;font-size:13px}
-.cand-score{font-size:11px;color:var(--muted);text-align:right}
-.cand-score strong{color:var(--text);font-size:13px;display:block}
-.rpn-bars{display:flex;gap:6px;padding:10px 14px}
-.rpn-bar{flex:1}
-.rpn-label{font-size:10px;color:var(--muted);margin-bottom:3px}
-.rpn-track{height:4px;background:var(--bg);border-radius:2px;overflow:hidden}
-.rpn-fill{height:100%;border-radius:2px}
-.rpn-val{font-size:11px;font-weight:600;margin-top:2px}
-.cand-sop{padding:10px 14px;border-top:1px solid var(--border)}
-.sop-row{display:flex;justify-content:space-between;align-items:center}
-.sop-id{font-size:11px;background:rgba(124,106,247,.12);color:var(--purple2);padding:2px 8px;border-radius:4px;font-family:monospace}
-.sop-time{font-size:11px;color:var(--muted)}
-.parts-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
-.part-chip{font-size:10px;padding:2px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;font-family:monospace;color:var(--text)}
-.part-chip.conditional{color:var(--muted);border-style:dashed}
+.asset-id{font-family:var(--mono);font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.asset-meta{font-size:10px;color:var(--text2);margin-top:2px}
+.sector-tag{font-size:9px;font-family:var(--mono);padding:2px 7px;border:1px solid var(--border2);color:var(--text3);border-radius:2px;white-space:nowrap;flex-shrink:0}
+.sector-tag.auto{border-color:var(--teal-border);color:var(--teal)}
+
+/* ── Symptom list ── */
+.sym-group-head{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--purple);margin:0 0 7px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sym-group-head::before{content:'';width:10px;height:1px;background:var(--purple)}
+.sym-group{margin-bottom:14px}
+.sym-row{display:flex;align-items:flex-start;gap:10px;padding:9px 11px;border:1px solid var(--border);margin-bottom:5px;cursor:pointer;transition:all .15s;border-radius:var(--r);background:var(--bg3)}
+.sym-row:hover{border-color:var(--border2)}
+.sym-row.sel{border-color:var(--amber-border);background:var(--amber-dim)}
+.sym-box{width:13px;height:13px;border:1px solid var(--border2);flex-shrink:0;margin-top:1px;transition:all .15s;display:flex;align-items:center;justify-content:center;border-radius:2px}
+.sym-row.sel .sym-box{background:var(--amber);border-color:var(--amber)}
+.sym-tick{width:7px;height:7px;display:none;background:#000;clip-path:polygon(14% 44%,0 65%,50% 100%,100% 16%,80% 0%,43% 62%)}
+.sym-row.sel .sym-tick{display:block}
+.sym-text{flex:1;min-width:0}
+.sym-desc{font-size:12px;line-height:1.4}
+.sym-sub{font-size:9px;color:var(--text2);font-family:var(--mono);margin-top:2px}
+.auto-badge{font-size:8px;font-family:var(--mono);padding:2px 5px;border:1px solid var(--teal-border);color:var(--teal);flex-shrink:0;letter-spacing:.04em;border-radius:2px}
+
+/* ── Results ── */
+.result-header{display:flex;align-items:center;gap:14px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--border)}
+.confidence-dial{width:58px;height:58px;flex-shrink:0}
+.result-copy h3{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:-.3px}
+.result-copy p{font-size:10px;color:var(--text2);font-family:var(--mono);margin-top:3px}
+
+.ai-analysis{background:var(--purple-dim);border:1px solid var(--purple-border);border-radius:var(--r);padding:12px 14px;margin-bottom:14px}
+.ai-analysis-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--purple);margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.ai-analysis-label::before{content:'';width:10px;height:1px;background:var(--purple)}
+.ai-analysis-text{font-size:12px;line-height:1.7;color:var(--text)}
+.typing-cursor::after{content:'▋';animation:blink 0.5s infinite;color:var(--purple);font-size:11px;margin-left:2px}
+
+.cand{border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:border-color .15s;border-radius:var(--r);overflow:hidden}
+.cand:hover{border-color:var(--border2)}
+.cand.sel{border-color:var(--teal-border)}
+.cand-top{display:flex;align-items:center;gap:10px;padding:11px 13px;background:rgba(255,255,255,0.02)}
+.cand-rank{width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;flex-shrink:0;border:1px solid;border-radius:50%}
+.cand-name{flex:1;font-size:12px;font-weight:500;line-height:1.3}
+.cand-val{font-family:var(--mono);font-size:11px}
+.bars{padding:8px 13px}
+.bar-line{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.bar-lbl{font-size:9px;font-family:var(--mono);color:var(--text3);width:50px;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em}
+.bar-track{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;transition:width .7s ease}
+.bar-num{font-family:var(--mono);font-size:9px;width:30px;text-align:right;flex-shrink:0}
+.sop{padding:9px 13px;border-top:1px solid var(--border)}
+.sop-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.sop-id{font-family:var(--mono);font-size:9px;padding:2px 6px;border:1px solid var(--purple-border);color:var(--purple);border-radius:2px}
+.sop-time{font-family:var(--mono);font-size:9px;color:var(--text2)}
+.sop-parts{display:flex;flex-wrap:wrap;gap:3px}
+.sop-part{font-family:var(--mono);font-size:8px;padding:2px 6px;border:1px solid var(--border2);color:var(--text2);border-radius:2px}
+
+/* ── SAP ── */
 .sap-section{margin-bottom:14px}
-.sap-section-title{font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
-.sap-field{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(46,50,72,.5);font-size:12px}
-.sap-field:last-child{border-bottom:none}
-.sap-key{color:var(--muted)}
-.sap-val{text-align:right;max-width:60%;word-break:break-word}
-.sap-ops{margin-top:8px}
-.sap-op{background:var(--bg3);border-radius:6px;padding:8px 10px;margin-bottom:4px}
-.sap-op-head{display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px}
-.sap-op-text{font-size:12px}
-.btn{width:100%;padding:14px;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;margin-bottom:8px}
-.btn-primary{background:var(--purple);color:#fff}
-.btn-primary:hover{background:var(--purple2)}
-.btn-primary:disabled{opacity:.4;cursor:not-allowed}
-.btn-confirm{background:var(--teal);color:#000}
-.btn-confirm:hover{opacity:.88}
-.btn-confirm:disabled{opacity:.4;cursor:not-allowed}
-.btn-sap{background:var(--bg3);color:var(--amber);border:1px solid var(--amber)}
-.btn-sap:hover{background:rgba(245,166,35,.08)}
-.btn-sap:disabled{opacity:.5;cursor:not-allowed}
-.btn-reset{background:transparent;color:var(--muted);border:1px solid var(--border)}
-.loader{text-align:center;padding:32px}
-.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
+.sap-section-title{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sap-section-title::before{content:'';width:10px;height:1px;background:var(--teal)}
+.sap-field{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);gap:12px}
+.sap-field:last-child{border:none}
+.sap-key{font-family:var(--mono);font-size:10px;color:var(--text2);flex-shrink:0}
+.sap-val{font-size:11px;text-align:right;word-break:break-word;max-width:60%}
+.sap-longtext{background:var(--bg3);border:1px solid var(--border);padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--text2);line-height:1.7;margin-top:6px;border-radius:var(--r);word-break:break-word}
+.ready-tag{font-size:9px;font-family:var(--mono);padding:2px 8px;border:1px solid var(--teal-border);color:var(--teal);letter-spacing:.05em;border-radius:2px}
+.priority-high{color:var(--red)}
+.priority-med{color:var(--amber)}
+
+/* ── History ── */
+.hist-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);margin-bottom:6px;border-radius:var(--r);background:var(--bg3)}
+.hist-status{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hist-info{flex:1;min-width:0}
+.hist-asset{font-family:var(--mono);font-size:11px;font-weight:500}
+.hist-cause{font-size:10px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-meta{font-family:var(--mono);font-size:9px;color:var(--text3);text-align:right;flex-shrink:0}
+
+/* ── Buttons ── */
+.btn-block{padding:0 20px;margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.btn{width:100%;padding:12px;border:none;font-family:var(--mono);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;letter-spacing:.05em;text-transform:uppercase;border-radius:var(--r)}
+.btn-teal{background:var(--teal);color:#000}
+.btn-teal:hover{background:#00e8b0}
+.btn-teal:disabled{opacity:.35;cursor:not-allowed}
+.btn-outline-teal{background:transparent;border:1px solid var(--teal-border);color:var(--teal)}
+.btn-outline-teal:hover{background:var(--teal-dim)}
+.btn-outline-teal:disabled{opacity:.35;cursor:not-allowed}
+.btn-outline-amber{background:transparent;border:1px solid var(--amber-border);color:var(--amber)}
+.btn-outline-amber:hover{background:var(--amber-dim)}
+.btn-outline-amber:disabled{opacity:.35;cursor:not-allowed}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text)}
+
+/* ── Bottom nav ── */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:540px;background:var(--bg2);border-top:1px solid var(--border);display:flex;z-index:50;display:none}
+.nav-item{flex:1;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border:none;background:transparent;color:var(--text3);font-family:var(--mono);font-size:8px;letter-spacing:.05em;text-transform:uppercase;transition:color .15s}
+.nav-item.active{color:var(--teal)}
+.nav-icon{font-size:14px;font-family:var(--mono)}
+
+/* ── Loader ── */
+.loader{text-align:center;padding:48px 20px}
+.spin{width:22px;height:22px;border:1.5px solid var(--border2);border-top-color:var(--teal);border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 10px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--teal);color:var(--teal);padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.loader-msg{font-family:var(--mono);font-size:11px;color:var(--text2)}
+.loader-sub{font-size:10px;color:var(--text3);margin-top:4px}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:36px 20px}
+.empty-icon{font-family:var(--mono);font-size:28px;color:var(--text3);margin-bottom:10px}
+.empty-msg{font-size:12px;color:var(--text2)}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--teal-border);color:var(--teal);padding:9px 16px;font-family:var(--mono);font-size:10px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;letter-spacing:.04em;border-radius:var(--r)}
 .toast.show{opacity:1}
-.tag-synced{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25);font-size:11px;padding:3px 10px;border-radius:20px}
+.toast.warn{border-color:var(--amber-border);color:var(--amber)}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .3s ease forwards}
 </style>
 </head>
 <body>
-<div id="app">
-  <div class="header">
-    <div class="header-logo">FT</div>
-    <div><h1>FTAI Mobile</h1><span>Fault Tree Artificial Intelligence</span></div>
-    <span class="demo-badge">DEMO v1.0</span>
-  </div>
-  <div id="config-banner">
-    <h3>Conectar ao Supabase (opcional)</h3>
-    <div class="cfg-row"><input class="cfg-input" id="cfg-url" placeholder="https://xxxx.supabase.co"></div>
-    <div class="cfg-row">
-      <input class="cfg-input" id="cfg-key" placeholder="Anon Key (eyJ...)">
-      <button class="cfg-btn" onclick="connectSupabase()">Conectar</button>
+<div id="shell">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logotype">
+      <div class="logotype-mark">FT</div>
+      <div>
+        <div class="logotype-text">FTAI</div>
+        <div class="logotype-sub">InnoFactury</div>
+      </div>
     </div>
-    <button class="cfg-btn" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);margin-top:8px;width:100%" onclick="useDemoMode()">Usar Demo Offline (dados mockados)</button>
+    <div class="topbar-right" id="topbar-right">
+      <div class="status-pill" id="db-status">OFFLINE</div>
+    </div>
   </div>
-  <div class="step-nav" id="step-nav" style="display:none">
-    <button class="step-btn" id="sn-1" onclick="gotoStep(1)">1 Ativo</button>
-    <button class="step-btn" id="sn-2" onclick="gotoStep(2)">2 Sintomas</button>
-    <button class="step-btn" id="sn-3" onclick="gotoStep(3)">3 Diagnóstico</button>
-    <button class="step-btn" id="sn-4" onclick="gotoStep(4)">4 SAP</button>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-hero fade-up">
+      <div class="login-hero-mark">FT</div>
+      <h1>Fault Tree<br>Artificial Intelligence</h1>
+      <p>Motor de diagn&#243;stico industrial com IA — RPN adaptativo + Claude AI + SAP PM</p>
+    </div>
+
+    <div class="login-card fade-up">
+      <div class="login-card-title">Conectar ao banco de dados</div>
+      <div class="field">
+        <label>Supabase URL</label>
+        <input id="in-url" placeholder="https://xxxx.supabase.co">
+      </div>
+      <div class="field">
+        <label>Anon Key</label>
+        <input id="in-key" type="password" placeholder="eyJ...">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Seu nome</label>
+          <input id="in-name" placeholder="Ex: Joao Silva">
+        </div>
+        <div class="field">
+          <label>Setor</label>
+          <input id="in-sector" placeholder="Ex: Automotivo" value="Automotive">
+        </div>
+      </div>
+      <button class="btn-main" onclick="connectLive()">ENTRAR NO SISTEMA</button>
+      <div class="divider">ou</div>
+      <button class="btn-sec" onclick="enterDemo()">MODO DEMONSTRA&#199;&#195;O — sem banco de dados</button>
+    </div>
+
+    <div class="features-grid fade-up">
+      <div class="feature-item">
+        <div class="feature-icon">[AI]</div>
+        <div class="feature-name">Motor Claude AI</div>
+        <div class="feature-desc">An&#225;lise t&#233;cnica em linguagem natural com racioc&#237;nio industrial</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">[ML]</div>
+        <div class="feature-name">RPN Adaptativo</div>
+        <div class="feature-desc">Aprende com cada diagn&#243;stico confirmado — precis&#227;o cresce com o uso</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">[DB]</div>
+        <div class="feature-name">Multi-setor</div>
+        <div class="feature-desc">Automotive, Mining, Pulp &amp; Paper — mesmo motor, conhecimento setorial</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">[SAP]</div>
+        <div class="feature-name">SAP PM Ready</div>
+        <div class="feature-desc">Nota de manuten&#231;&#227;o + OS + BOM gerados automaticamente</div>
+      </div>
+    </div>
+
+    <div class="innofactury-badge">
+      <span>Desenvolvido por <strong>InnoFactury Consulting LLC</strong> · v2.0</span>
+    </div>
   </div>
-  <div id="step-content"></div>
+
+  <!-- MAIN APP -->
+  <div id="app-screen" style="display:none">
+    <!-- steps nav -->
+    <div class="step-nav" id="step-nav">
+      <button class="step-btn" id="sn1" onclick="goStep(1)">01&#xA0;ATIVO</button>
+      <button class="step-btn" id="sn2" onclick="goStep(2)">02&#xA0;SINTOMAS</button>
+      <button class="step-btn" id="sn3" onclick="goStep(3)">03&#xA0;IA</button>
+      <button class="step-btn" id="sn4" onclick="goStep(4)">04&#xA0;SAP</button>
+      <button class="step-btn" id="sn5" onclick="goStep(5)">05&#xA0;HIST</button>
+    </div>
+    <div id="step-content"></div>
+  </div>
+
 </div>
 <div class="toast" id="toast"></div>
+
 <script>
-var sb=null,step=0,selAsset=null,selSymptoms=new Set(),diagResult=null,selCandidate=null,diagId=null,sapPayload=null;
-var ICONS={'Robo Solda Spot':'Robot','Prensa Hidraulica':'Gear','AGV Logistico':'Car'};
-var MOCK={
+/* ─── State ──────────────────────────────────────────────── */
+var sb=null,demoMode=false,userName='',userSector='';
+var step=0,selAsset=null,selSyms=new Set();
+var diagResult=null,selCandidate=null,sapPayload=null,diagEventId=null;
+
+/* ─── Demo data ──────────────────────────────────────────── */
+var D={
   assets:[
-    {id:'ROBOT_KUKA_A_001',sap_equipment_number:'10023456',functional_location:'PTA-LA-ROB-001',plant:'Planta A',line:'Linha_A',asset_types:{name:'Robo Solda Spot',manufacturer:'Kuka',model_family:'KR Agilus',modules:{name:'Automotive'}}},
-    {id:'PRENSA_SCHULER_B_001',sap_equipment_number:'10034001',functional_location:'PTB-LB-PRE-001',plant:'Planta B',line:'Linha_B',asset_types:{name:'Prensa Hidraulica',manufacturer:'Schuler',model_family:'MSC Series',modules:{name:'Automotive'}}},
-    {id:'AGV_STILL_001',sap_equipment_number:'10045001',functional_location:'PTA-WH-AGV-001',plant:'Planta A',line:'Warehouse',asset_types:{name:'AGV Logistico',manufacturer:'STILL',model_family:'LTX Series',modules:{name:'Automotive'}}}
+    {id:'ROBOT_KUKA_A_001',plant:'Planta A',line:'Linha_A',asset_types:{name:'Robo Solda Spot',manufacturer:'Kuka',model_family:'KR Agilus',modules:{name:'Automotive'}}},
+    {id:'PRENSA_SCHULER_B_001',plant:'Planta B',line:'Linha_B',asset_types:{name:'Prensa Hidraulica',manufacturer:'Schuler',model_family:'MSC Series',modules:{name:'Automotive'}}},
+    {id:'AGV_STILL_001',plant:'Planta A',line:'Warehouse',asset_types:{name:'AGV Logistico',manufacturer:'STILL',model_family:'LTX Series',modules:{name:'Automotive'}}}
   ],
   symptoms:{
     'ROBOT_KUKA_A_001':[
-      {group:'Servomotor / Eixo 1 → Encoder',items:[
-        {id:'s001',description:'Alarme E-045 na IHM KRC4',auto_detectable:true,failure_mode:{description:'Erro de Leitura do Encoder'}},
-        {id:'s002',description:'Vibracao anormal no eixo durante movimento',auto_detectable:false,failure_mode:{description:'Erro de Leitura do Encoder'}},
-        {id:'s003',description:'Posicionamento incorreto — peca fora de tolerancia',auto_detectable:false,failure_mode:{description:'Erro de Leitura do Encoder'}},
-        {id:'s004',description:'Drift de posicao apos mastering',auto_detectable:true,failure_mode:{description:'Deriva de Zero do Encoder'}}
+      {g:'Servomotor Eixo 1 — Encoder',items:[
+        {id:'s001',desc:'Alarme E-045 na IHM KRC4',auto:true,fm:'Erro de Leitura do Encoder'},
+        {id:'s002',desc:'Vibracao anormal no eixo durante movimento',auto:false,fm:'Erro de Leitura do Encoder'},
+        {id:'s003',desc:'Posicionamento incorreto — peca fora de tolerancia',auto:false,fm:'Erro de Leitura do Encoder'},
+        {id:'s004',desc:'Drift de posicao apos mastering',auto:true,fm:'Deriva de Zero do Encoder'}
       ]},
-      {group:'Servomotor / Eixo 1 → Motor',items:[
-        {id:'s005',description:'Alarme F070 — Temperatura Motor acima de 80C',auto_detectable:true,failure_mode:{description:'Superaquecimento do Motor'}},
-        {id:'s006',description:'Reducao automatica de velocidade pelo drive',auto_detectable:true,failure_mode:{description:'Superaquecimento do Motor'}}
+      {g:'Servomotor Eixo 1 — Motor',items:[
+        {id:'s005',desc:'Alarme F070 Temperatura Motor acima de 80C',auto:true,fm:'Superaquecimento do Motor'},
+        {id:'s006',desc:'Reducao automatica de velocidade pelo drive',auto:true,fm:'Superaquecimento do Motor'}
       ]},
-      {group:'Hidraulico → Valvula',items:[
-        {id:'s007',description:'Pinca nao mantem forca apos fechamento',auto_detectable:false,failure_mode:{description:'Vazamento na Valvula'}},
-        {id:'s008',description:'Oleo hidraulico aquecido acima de 60C',auto_detectable:true,failure_mode:{description:'Vazamento na Valvula'}}
+      {g:'Sistema Hidraulico — Valvula',items:[
+        {id:'s007',desc:'Pinca nao mantem forca apos fechamento',auto:false,fm:'Vazamento na Valvula Direcional'},
+        {id:'s008',desc:'Oleo hidraulico aquecido acima de 60C',auto:true,fm:'Vazamento na Valvula Direcional'}
       ]}
     ],
     'PRENSA_SCHULER_B_001':[
-      {group:'Hidraulico → Bomba',items:[
-        {id:'s010',description:'Pressao abaixo de 160 bar no manometro',auto_detectable:true,failure_mode:{description:'Perda de Pressao na Bomba'}},
-        {id:'s011',description:'Ciclo de prensagem mais lento que normal',auto_detectable:false,failure_mode:{description:'Perda de Pressao na Bomba'}}
+      {g:'Hidraulico Principal — Bomba',items:[
+        {id:'s010',desc:'Pressao abaixo de 160 bar no manometro',auto:true,fm:'Perda de Pressao na Bomba'},
+        {id:'s011',desc:'Ciclo de prensagem mais lento que normal',auto:false,fm:'Perda de Pressao na Bomba'}
       ]}
     ],
     'AGV_STILL_001':[
-      {group:'Navegacao → LiDAR',items:[
-        {id:'s020',description:'AGV para em area sem obstaculos (falso positivo)',auto_detectable:true,failure_mode:{description:'Falha no Sensor LiDAR'}}
+      {g:'Sistema de Navegacao — LiDAR',items:[
+        {id:'s020',desc:'AGV para em area sem obstaculos (falso positivo)',auto:true,fm:'Falha no Sensor LiDAR'}
       ]}
     ]
   },
   candidates:[
-    {id:'rc001',description:'Cabo do Encoder Interrompido (Eixo 1)',probability_weight:0.65,severity:8,occurrence:4,detection:3,total_rpn:96,priority_score:62.4,
-      corrective_action:{sop_id:'SOP-ENC-001',title:'Substituicao de Cabo Encoder – Eixo 1',estimated_time_hours:2.5,skill_required:'Eletricista Nivel II',
-        steps:['1. LOTO no painel KRC4','2. Aguardar descarga DC 5 min','3. Localizar conector X30','4. Substituir cabo CAB-ENCODER-5M','5. Reconectar X30 e verificar trava','6. Remover LOTO e energizar','7. Referenciar: Setup > Mastering','8. Testar 3 ciclos — sem alarme E-045'],
-        spare_parts:[{material:'CAB-ENCODER-5M',description:'Cabo Encoder 5m',qty:1,storage_loc:'AL01',is_conditional:false},{material:'CONN-M12-8P',description:'Conector M12',qty:2,storage_loc:'AL01',is_conditional:false}]},
-      mitigative_action:{type:'predictive',title:'Monitoramento Preditivo Encoder',description:'Alerta em 15% degradacao. Tag: VIB-AXIS1-RMS.'}},
-    {id:'rc002',description:'Encoder Desgastado / Fim de Vida Util',probability_weight:0.25,severity:8,occurrence:2,detection:3,total_rpn:48,priority_score:12.0,
-      corrective_action:{sop_id:'SOP-ENC-002',title:'Substituicao Completa Encoder',estimated_time_hours:4.0,skill_required:'Eletricista Senior + Mecanico',
-        steps:['1. LOTO + descarga DC','2. Remover protecao mecanica','3. Substituir encoder ENC-KUKA-FULL-001','4. Torquear 8 Nm','5. Mastering completo','6. Validar repeticoes ±0.04mm'],
-        spare_parts:[{material:'ENC-KUKA-FULL-001',description:'Encoder Absoluto Completo',qty:1,storage_loc:'AL01',is_conditional:false}]},mitigative_action:null},
-    {id:'rc003',description:'Conector M12 Solto / Oxidado',probability_weight:0.10,severity:8,occurrence:2,detection:2,total_rpn:32,priority_score:3.2,
-      corrective_action:{sop_id:'SOP-ENC-003',title:'Limpeza e Re-crimpagem Conector M12',estimated_time_hours:0.5,skill_required:'Tecnico Eletricista',
-        steps:['1. LOTO','2. Localizar conector M12','3. Limpar com alcool isopropilico','4. Re-crimpar se necessario','5. Testar continuidade'],
-        spare_parts:[{material:'CONN-M12-8P',description:'Conector M12',qty:1,storage_loc:'AL01',is_conditional:true}]},mitigative_action:null}
+    {root_cause_id:'rc001',root_cause:'Cabo do Encoder Interrompido Eixo 1',severity:8,occurrence:4,detection:3,total_rpn:96,priority_score:62.4,probability_weight:0.65,corrective_action_id:'CA-ENC-001',corrective_action_title:'Substituicao de Cabo Encoder Eixo 1',estimated_time_hours:2.5,skill_required:'Eletricista Nivel II',spare_parts:['CAB-ENCODER-5M x1','CONN-M12-8P x2']},
+    {root_cause_id:'rc002',root_cause:'Encoder Desgastado — Fim de Vida Util',severity:8,occurrence:2,detection:3,total_rpn:48,priority_score:12.0,probability_weight:0.25,corrective_action_id:'CA-ENC-002',corrective_action_title:'Substituicao Completa do Encoder Eixo 1',estimated_time_hours:4.0,skill_required:'Eletricista Senior + Mecanico',spare_parts:['ENC-KUKA-FULL-001 x1']},
+    {root_cause_id:'rc003',root_cause:'Conector M12 Solto ou Oxidado',severity:8,occurrence:2,detection:2,total_rpn:32,priority_score:3.2,probability_weight:0.10,corrective_action_id:'CA-ENC-003',corrective_action_title:'Limpeza e Re-crimpagem Conector M12',estimated_time_hours:0.5,skill_required:'Tecnico Eletricista',spare_parts:['CONN-M12-8P x1']}
+  ],
+  history:[
+    {id:'diag-001',asset:'ROBOT_KUKA_A_001',cause:'Cabo Encoder Interrompido',ts:'2026-04-16 09:31',synced:true,rpn:96},
+    {id:'diag-002',asset:'PRENSA_SCHULER_B_001',cause:'Desgaste Palhetas Bomba',ts:'2026-04-15 14:20',synced:true,rpn:96},
+    {id:'diag-003',asset:'ROBOT_KUKA_A_002',cause:'Filtro Drive Entupido',ts:'2026-04-14 11:05',synced:false,rpn:100}
   ]
 };
 
-function connectSupabase(){
-  var url=document.getElementById('cfg-url').value.trim(),key=document.getElementById('cfg-key').value.trim();
-  if(!url||!key){showToast('Preencha URL e Anon Key');return}
-  try{sb=supabase.createClient(url,key);document.getElementById('config-banner').style.display='none';document.getElementById('step-nav').style.display='flex';gotoStep(1);showToast('Conectado ao Supabase!')}
-  catch(e){showToast('Erro: '+e.message)}
+/* ─── Auth ───────────────────────────────────────────────── */
+function connectLive(){
+  var url=document.getElementById('in-url').value.trim();
+  var key=document.getElementById('in-key').value.trim();
+  userName=document.getElementById('in-name').value.trim()||'Tecnico';
+  userSector=document.getElementById('in-sector').value.trim()||'Automotive';
+  if(!url||!key){toast('Preencha URL e Anon Key','warn');return}
+  try{
+    sb=supabase.createClient(url,key);
+    demoMode=false;
+    showApp('SUPABASE');
+  }catch(e){toast('Erro: '+e.message,'warn')}
 }
-function useDemoMode(){sb=null;document.getElementById('config-banner').style.display='none';document.getElementById('step-nav').style.display='flex';gotoStep(1);showToast('Modo demo ativo')}
 
-function gotoStep(n){
+function enterDemo(){
+  demoMode=true;userName='Demo User';userSector='Automotive';
+  showApp('DEMO');
+}
+
+function showApp(mode){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-screen').style.display='block';
+  var pill=document.getElementById('db-status');
+  pill.textContent=mode;
+  if(mode==='SUPABASE')pill.classList.add('connected');
+  var tr=document.getElementById('topbar-right');
+  tr.innerHTML='<div class="status-pill '+(mode==='SUPABASE'?'connected':'')+'" id="db-status"><span class="status-dot" style="'+(mode!=='SUPABASE'?'background:var(--text3);animation:none':'')+' "></span>'+mode+'</div>'
+    +'<div style="font-family:var(--mono);font-size:10px;color:var(--text2);padding:4px 8px;border:1px solid var(--border)">'+userName+'</div>';
+  goStep(1);
+}
+
+/* ─── Navigation ─────────────────────────────────────────── */
+function goStep(n){
   step=n;
-  document.querySelectorAll('.step-btn').forEach(function(b,i){b.classList.toggle('active',i+1===n);b.classList.toggle('done',i+1<n)});
-  var el=document.getElementById('step-content');el.innerHTML='';
-  if(n===1)renderStep1();else if(n===2)renderStep2();else if(n===3)renderStep3();else if(n===4)renderStep4();
+  document.querySelectorAll('.step-btn').forEach(function(b,i){
+    b.classList.toggle('active',i+1===n);
+    b.classList.toggle('done',i+1<n);
+  });
+  var el=document.getElementById('step-content');
+  el.innerHTML='';
+  if(n===1)step1();
+  else if(n===2)step2();
+  else if(n===3)step3();
+  else if(n===4)step4();
+  else if(n===5)step5();
 }
 
-function renderStep1(){
+/* ─── Step 1: Assets ─────────────────────────────────────── */
+async function step1(){
   var el=document.getElementById('step-content');
-  el.innerHTML='<div class="card"><div class="card-title">Selecionar Ativo</div><div id="asset-list"><div class="loader"><div class="spinner"></div><p>Carregando…</p></div></div></div>';
-  var assets=MOCK.assets;
-  document.getElementById('asset-list').innerHTML=assets.map(function(a){
-    return '<div class="asset-item" onclick="selectAsset(\''+a.id+'\')"><div class="asset-icon">🔧</div><div class="asset-info"><div class="asset-name">'+a.id+'</div><div class="asset-sub">'+a.asset_types.manufacturer+' '+a.asset_types.model_family+' · '+a.plant+' / '+a.line+'</div></div><span class="asset-badge">'+a.asset_types.modules.name+'</span></div>';
+  el.innerHTML=card('Selecionar ativo','<div class="loader"><div class="spin"></div><div class="loader-msg">Carregando ativos...</div></div>','asset-list-wrap');
+  var assets=D.assets;
+  if(!demoMode&&sb){
+    var r=await sb.from('asset_instances').select('*,asset_types(*,modules(*))').eq('is_active',true);
+    if(r.data&&r.data.length)assets=r.data;
+    else toast('Usando dados demo','warn');
+  }
+  var mono_map={'Robo Solda Spot':'ROB','Prensa Hidraulica':'PRS','AGV Logistico':'AGV','Robo Solda Spot':'ROB'};
+  document.getElementById('asset-list-wrap').innerHTML=assets.map(function(a){
+    var n=a.asset_types?.name||'';
+    var mono=mono_map[n]||(n.substring(0,3).toUpperCase());
+    return '<div class="asset-item fade-up" onclick="pickAsset(\''+a.id+'\')">'
+      +'<div class="asset-monogram">'+mono+'</div>'
+      +'<div class="asset-info"><div class="asset-id">'+a.id+'</div>'
+      +'<div class="asset-meta">'+(a.asset_types?.manufacturer||'')+' · '+a.plant+' / '+a.line+'</div></div>'
+      +'<span class="sector-tag auto">'+(a.asset_types?.modules?.name||'AUTO')+'</span>'
+      +'</div>';
   }).join('');
-}
-function selectAsset(id){
-  selAsset=MOCK.assets.find(function(a){return a.id===id});
-  selSymptoms.clear();setTimeout(function(){gotoStep(2)},200);
 }
 
-function renderStep2(){
-  if(!selAsset){gotoStep(1);return}
-  var el=document.getElementById('step-content');
-  el.innerHTML='<div class="card"><div class="card-title">Ativo: '+selAsset.id+'</div><div id="symptom-list"></div></div><div style="padding:0 16px"><button class="btn btn-primary" id="btn-diag" onclick="runDiagnosis()" disabled>Analisar com FTAI</button><button class="btn btn-reset" onclick="gotoStep(1)">← Voltar</button></div>';
-  var groups=MOCK.symptoms[selAsset.id]||[];
-  document.getElementById('symptom-list').innerHTML=groups.map(function(g){
-    return '<div class="symptom-group"><div class="symptom-group-title">'+g.group+'</div>'+
-      g.items.map(function(s){
-        return '<div class="symptom-chip" id="sc-'+s.id+'" onclick="toggleSym(\''+s.id+'\')"><div class="sym-dot"></div><div style="flex:1"><div>'+s.description+'</div><div style="font-size:10px;color:var(--muted)">'+s.failure_mode.description+'</div></div>'+(s.auto_detectable?'<span class="sym-auto">AUTO</span>':'')+'</div>';
-      }).join('')+'</div>';
-  }).join('');
+function pickAsset(id){
+  selAsset=D.assets.find(function(a){return a.id===id})||{id:id,plant:'—',line:'—',asset_types:{name:'—',manufacturer:'—',modules:{name:'—'}}};
+  selSyms.clear();
+  setTimeout(function(){goStep(2)},180);
 }
+
+/* ─── Step 2: Symptoms ───────────────────────────────────── */
+async function step2(){
+  if(!selAsset){goStep(1);return}
+  var el=document.getElementById('step-content');
+  el.innerHTML=card('Ativo: '+selAsset.id,'<div class="loader"><div class="spin"></div><div class="loader-msg">Carregando sintomas...</div></div>','sym-list-wrap')
+    +'<div class="btn-block"><button class="btn btn-teal" id="btn-analyze" onclick="runDiagnosis()" disabled>ANALISAR COM FTAI AI &#8594;</button><button class="btn btn-ghost" onclick="goStep(1)">&#8592; VOLTAR</button></div>';
+
+  var groups=D.symptoms[selAsset.id]||[];
+
+  if(!demoMode&&sb){
+    var r=await sb.from('v_fta_inference')
+      .select('symptom_id,symptom_description,alarm_code,auto_detectable,system_name,component_name,failure_mode')
+      .eq('asset_type_name',selAsset.asset_types?.name||'')
+      .order('system_name');
+    if(r.data&&r.data.length){
+      var seen=new Set(),map={};
+      r.data.filter(function(s){if(seen.has(s.symptom_id))return false;seen.add(s.symptom_id);return true})
+        .forEach(function(s){
+          var g=s.system_name||'Sistema';
+          if(!map[g])map[g]=[];
+          map[g].push({id:s.symptom_id,desc:s.symptom_description||s.alarm_code,auto:s.auto_detectable,fm:s.failure_mode,component:s.component_name});
+        });
+      groups=Object.keys(map).map(function(k){return{g:k,items:map[k]}});
+    }
+  }
+
+  document.getElementById('sym-list-wrap').innerHTML=groups.map(function(grp){
+    return '<div class="sym-group">'
+      +'<div class="sym-group-head">'+grp.g+'</div>'
+      +grp.items.map(function(s){
+        return '<div class="sym-row" id="sr-'+s.id+'" onclick="toggleSym(\''+s.id+'\')">'
+          +'<div class="sym-box"><div class="sym-tick"></div></div>'
+          +'<div class="sym-text"><div class="sym-desc">'+s.desc+'</div>'
+          +'<div class="sym-sub">'+s.fm+(s.component?' · '+s.component:'')+'</div></div>'
+          +(s.auto?'<span class="auto-badge">AUTO</span>':'')
+          +'</div>';
+      }).join('')
+      +'</div>';
+  }).join('');
+
+  updateAnalyzeBtn();
+}
+
 function toggleSym(id){
-  if(selSymptoms.has(id))selSymptoms.delete(id);else selSymptoms.add(id);
-  var c=document.getElementById('sc-'+id);if(c)c.classList.toggle('selected',selSymptoms.has(id));
-  var btn=document.getElementById('btn-diag');if(btn){btn.disabled=selSymptoms.size===0;btn.textContent=selSymptoms.size>0?'Analisar '+selSymptoms.size+' sintoma(s) →':'Analisar com FTAI'}
+  if(selSyms.has(id))selSyms.delete(id);else selSyms.add(id);
+  var el=document.getElementById('sr-'+id);
+  if(el)el.classList.toggle('sel',selSyms.has(id));
+  updateAnalyzeBtn();
+}
+function updateAnalyzeBtn(){
+  var btn=document.getElementById('btn-analyze');
+  if(!btn)return;
+  btn.disabled=selSyms.size===0;
+  btn.textContent=selSyms.size>0?'ANALISAR '+selSyms.size+' SINTOMA(S) →':'ANALISAR COM FTAI AI →';
 }
 
+/* ─── Step 3: AI Diagnosis ───────────────────────────────── */
 async function runDiagnosis(){
-  if(selSymptoms.size===0)return;
-  document.getElementById('step-content').innerHTML='<div class="loader" style="padding:60px 20px"><div class="spinner"></div><p style="color:var(--purple2);font-weight:600">FTAI analisando '+selSymptoms.size+' sintoma(s)…</p><p style="color:var(--muted);font-size:12px;margin-top:4px">Percorrendo grafo de falhas · RPN × probabilidade</p></div>';
-  await new Promise(function(r){setTimeout(r,900)});
-  diagResult={confidence_score:0.87,matched_symptom_count:selSymptoms.size,candidates:MOCK.candidates};
-  diagId='demo-'+Date.now();
-  gotoStep(3);
+  var el=document.getElementById('step-content');
+  el.innerHTML='<div class="loader" style="padding:64px 20px"><div class="spin"></div><div class="loader-msg">FTAI AI analisando...</div><div class="loader-sub">Claude AI + RPN adaptativo · grafo de falhas</div></div>';
+  await sleep(700);
+
+  var candidates=D.candidates;
+  if(!demoMode&&sb){
+    var ids=[...selSyms];
+    var r=await sb.from('v_fta_inference').select('*').in('symptom_id',ids).order('priority_score',{ascending:false});
+    if(r.data&&r.data.length){
+      var seen=new Set();
+      candidates=r.data.filter(function(c){
+        if(!c.root_cause_id||seen.has(c.root_cause_id))return false;
+        seen.add(c.root_cause_id);return true;
+      }).map(function(c){
+        return{root_cause_id:c.root_cause_id,root_cause:c.root_cause,severity:c.severity,occurrence:c.occurrence,detection:c.detection,total_rpn:c.total_rpn,priority_score:c.priority_score,probability_weight:c.probability_weight,corrective_action_id:c.corrective_action_id,corrective_action_title:c.corrective_action_title,estimated_time_hours:c.estimated_time_hours,skill_required:c.skill_required,spare_parts:[]};
+      });
+    }
+  }
+
+  var top=candidates[0]||{};
+  var conf=Math.min(0.99,parseFloat(top.priority_score||0)/100+selSyms.size*0.05);
+  diagResult={conf:conf,candidates:candidates,reasoning:null};
+
+  goStep(3);
+  await sleep(300);
+  renderDiagnosis(candidates,conf);
+  var reasoning=await getClaudeReasoning(candidates.slice(0,3),[...selSyms]);
+  var textEl=document.getElementById('ai-text');
+  if(textEl){textEl.textContent=reasoning;textEl.classList.remove('typing-cursor')}
+  diagResult.reasoning=reasoning;
 }
 
-function renderStep3(){
-  if(!diagResult){gotoStep(2);return}
-  var conf=Math.round(diagResult.confidence_score*100);
-  var clr=conf>=80?'var(--teal)':conf>=60?'var(--amber)':'var(--red)';
+async function step3(){
+  if(!diagResult){goStep(2);return}
+  renderDiagnosis(diagResult.candidates,diagResult.conf);
+  if(diagResult.reasoning){
+    var textEl=document.getElementById('ai-text');
+    if(textEl){textEl.textContent=diagResult.reasoning;textEl.classList.remove('typing-cursor')}
+  }
+}
+
+function renderDiagnosis(candidates,conf){
   var el=document.getElementById('step-content');
-  el.innerHTML='<div class="card"><div class="result-header"><svg class="confidence-ring" viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" fill="none" stroke="#22263a" stroke-width="4"/><circle cx="26" cy="26" r="22" fill="none" stroke="'+clr+'" stroke-width="4" stroke-dasharray="'+(2*Math.PI*22)+'" stroke-dashoffset="'+(2*Math.PI*22*(1-conf/100))+'" transform="rotate(-90 26 26)" stroke-linecap="round"/><text x="26" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="'+clr+'">'+conf+'%</text></svg><div class="result-meta"><h3>FTAI Diagnostico Concluido</h3><p>'+diagResult.candidates.length+' causa(s) raiz · '+diagResult.matched_symptom_count+' sintoma(s)</p></div></div><div id="cands"></div></div><div style="padding:0 16px"><button class="btn btn-confirm" id="btn-conf" onclick="confirmDiag()" disabled>Confirmar Diagnostico Selecionado</button><button class="btn btn-reset" onclick="gotoStep(2)">← Rever sintomas</button></div>';
-  var cEl=document.getElementById('cands');
-  cEl.innerHTML=diagResult.candidates.map(function(c,i){
-    var sop=c.corrective_action;var parts=(sop&&sop.spare_parts)||[];
-    var rankClr=i===0?'var(--amber)':i===1?'var(--purple)':'var(--muted)';
-    return '<div class="candidate" id="cand-'+i+'" onclick="selCand('+i+')">'+
-      '<div class="cand-head"><div class="cand-rank rank-'+(i+1)+'" style="background:'+rankClr+'">'+(i+1)+'</div><div class="cand-title">'+c.description+'</div><div class="cand-score"><strong>'+c.priority_score+'</strong>score</div></div>'+
-      '<div class="rpn-bars">'+
-        [['S',c.severity,'var(--red)'],['O',c.occurrence,'var(--amber)'],['D',c.detection,'var(--purple)'],['RPN',c.total_rpn,'var(--teal)'],['P',Math.round(c.probability_weight*100),'var(--purple2)']].map(function(x){
-          var maxVal=x[0]==='RPN'?1000:x[0]==='P'?100:10;
-          return '<div class="rpn-bar"><div class="rpn-label">'+x[0]+'</div><div class="rpn-track"><div class="rpn-fill" style="width:'+Math.min(100,x[1]/maxVal*100)+'%;background:'+x[2]+'"></div></div><div class="rpn-val" style="color:'+x[2]+'">'+x[1]+(x[0]==='P'?'%':'')+'</div></div>';
-        }).join('')+
-      '</div>'+
-      (sop?'<div class="cand-sop"><div class="sop-row"><span class="sop-id">'+sop.sop_id+'</span><span class="sop-time">⏱ '+sop.estimated_time_hours+'h · '+sop.skill_required+'</span></div>'+(parts.length>0?'<div class="parts-row">'+parts.map(function(p){return '<span class="part-chip'+(p.is_conditional?' conditional':'')+'">'+p.material+' x'+p.qty+(p.is_conditional?' (cond.)':'')+'</span>'}).join('')+'</div>':'')+'</div>':'')+
-    '</div>';
+  var confPct=Math.round(conf*100);
+  var confColor=confPct>=80?'#00d4a0':confPct>=60?'#f0a500':'#ff4d4d';
+  var circ=2*Math.PI*24;
+
+  el.innerHTML=card('Diagnostico FTAI',
+    '<div class="result-header">'
+    +'<svg class="confidence-dial" viewBox="0 0 58 58">'
+    +'<circle cx="29" cy="29" r="24" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3.5"/>'
+    +'<circle cx="29" cy="29" r="24" fill="none" stroke="'+confColor+'" stroke-width="3.5" stroke-dasharray="'+circ+'" stroke-dashoffset="'+circ*(1-conf)+'" transform="rotate(-90 29 29)" stroke-linecap="square"/>'
+    +'<text x="29" y="33" text-anchor="middle" font-size="12" font-weight="500" font-family="DM Mono,monospace" fill="'+confColor+'">'+confPct+'%</text>'
+    +'</svg>'
+    +'<div class="result-copy"><h3>'+candidates.length+' causa(s) identificada(s)</h3><p>'+selSyms.size+' sintoma(s) · '+selAsset.id+'</p></div>'
+    +'</div>'
+    +'<div class="ai-analysis">'
+    +'<div class="ai-analysis-label">Analise Claude AI</div>'
+    +'<div class="ai-analysis-text typing-cursor" id="ai-text">Analisando padroes de falha...</div>'
+    +'</div>'
+    +renderCandidates(candidates)
+  )
+  +'<div class="btn-block"><button class="btn btn-outline-teal" id="btn-conf" onclick="confirmDiag()" disabled>CONFIRMAR DIAGNOSTICO →</button><button class="btn btn-ghost" onclick="goStep(2)">&#8592; REVER SINTOMAS</button></div>';
+
+  el.innerHTML+=
+    '<div class="btn-block"><button class="btn btn-outline-teal" id="btn-conf" onclick="confirmDiag()" disabled>CONFIRMAR DIAGNOSTICO &#8594;</button><button class="btn btn-ghost" onclick="goStep(2)">&#8592; REVER SINTOMAS</button></div>';
+}
+
+function renderCandidates(candidates){
+  var colors=['#00d4a0','#9d8ff9','#4a5068'];
+  var maxRPN=candidates.reduce(function(m,c){return Math.max(m,parseInt(c.total_rpn||0))},1);
+  var maxPS=candidates.reduce(function(m,c){return Math.max(m,parseFloat(c.priority_score||0))},1);
+
+  return candidates.slice(0,3).map(function(c,i){
+    var rpn=parseInt(c.total_rpn||0);
+    var ps=parseFloat(c.priority_score||0).toFixed(1);
+    var pw=Math.round(parseFloat(c.probability_weight||0)*100);
+    var col=colors[i]||'#4a5068';
+    var parts=Array.isArray(c.spare_parts)?c.spare_parts:(c.spare_parts?[c.spare_parts]:[]);
+    return '<div class="cand fade-up" id="cand-'+i+'" onclick="pickCand('+i+')">'
+      +'<div class="cand-top">'
+      +'<div class="cand-rank" style="border-color:'+col+';color:'+col+'">'+(i+1)+'</div>'
+      +'<div class="cand-name">'+c.root_cause+'</div>'
+      +'<div class="cand-val" style="color:'+col+'">'+ps+'</div>'
+      +'</div>'
+      +'<div class="bars">'
+      +barLine('RPN',Math.round(rpn/maxRPN*100),rpn,col)
+      +barLine('Score',Math.round(ps/maxPS*100),ps,'#378ADD')
+      +barLine('P(w)',pw,pw+'%','#9d8ff9')
+      +'</div>'
+      +(c.corrective_action_id?
+        '<div class="sop"><div class="sop-top"><span class="sop-id">'+c.corrective_action_id+'</span><span class="sop-time">'+(c.estimated_time_hours||'?')+'h · '+(c.skill_required||'—')+'</span></div>'
+        +(parts.length?'<div class="sop-parts">'+parts.map(function(p){return'<span class="sop-part">'+p+'</span>'}).join('')+'</div>':'')
+        +'</div>':'')
+      +'</div>';
   }).join('');
 }
-function selCand(i){
-  selCandidate=diagResult.candidates[i];
-  document.querySelectorAll('.candidate').forEach(function(el,j){el.classList.toggle('selected',j===i)});
-  var btn=document.getElementById('btn-conf');if(btn)btn.disabled=false;
+
+function barLine(lbl,pct,val,col){
+  return '<div class="bar-line"><span class="bar-lbl">'+lbl+'</span>'
+    +'<div class="bar-track"><div class="bar-fill" style="width:'+Math.min(100,pct)+'%;background:'+col+'"></div></div>'
+    +'<span class="bar-num" style="color:'+col+'">'+val+'</span></div>';
 }
+
+function pickCand(i){
+  selCandidate=diagResult.candidates[i];
+  document.querySelectorAll('.cand').forEach(function(el,j){el.classList.toggle('sel',j===i)});
+  var btn=document.getElementById('btn-conf');
+  if(btn)btn.disabled=false;
+}
+
+async function getClaudeReasoning(topCands,symIds){
+  var symList=symIds.slice(0,3).join(', ');
+  var causesText=topCands.map(function(c,i){return (i+1)+'. '+c.root_cause+' (RPN='+(c.total_rpn||'?')+', P='+Math.round((c.probability_weight||0)*100)+'%)'}).join(' | ');
+  var prompt='Voce e o motor FTAI de diagnostico industrial. Responda em portugues tecnico, maximo 2 frases diretas, sem markdown.\n\nAtivo: '+selAsset.id+'\nSintomas reportados: '+selSyms.size+'\nTop 3 causas por RPN x probabilidade: '+causesText+'\n\nDe sua conclusao tecnica: qual causa confirmar e qual o risco de nao agir imediatamente?';
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:prompt}]})
+    });
+    var d=await r.json();
+    if(d.content&&d.content[0]&&d.content[0].text)return d.content[0].text;
+  }catch(e){}
+  return topCands[0]?.root_cause
+    ? 'Causa mais provavel: '+topCands[0].root_cause+' ('+Math.round((topCands[0].probability_weight||0.65)*100)+'% de historico, RPN='+topCands[0].total_rpn+'). Sem correcao imediata: risco de parada nao programada — prioridade ALTA.'
+    : 'Analise concluida. Selecione a causa raiz para confirmar o diagnostico.';
+}
+
+/* ─── Confirm diagnosis ──────────────────────────────────── */
 async function confirmDiag(){
   if(!selCandidate)return;
-  var btn=document.getElementById('btn-conf');btn.textContent='Confirmando…';btn.disabled=true;
-  await new Promise(function(r){setTimeout(r,700)});
-  sapPayload=buildSap(selCandidate,selAsset);
-  showToast('Confirmado! RPN atualizado ✓');gotoStep(4);
+  var btn=document.getElementById('btn-conf');
+  btn.textContent='CONFIRMANDO...';btn.disabled=true;
+
+  if(!demoMode&&sb){
+    var ins=await sb.from('diagnosis_events').insert({
+      asset_instance_id:selAsset.id,
+      symptom_id:[...selSyms][0]||null,
+      confirmed_root_cause_id:selCandidate.root_cause_id,
+      diagnosed_by:userName,
+      confidence_score:diagResult.conf,
+      pending_sync:true
+    }).select().single();
+    if(!ins.error){diagEventId=ins.data.id;toast('Salvo no banco #'+ins.data.id.substring(0,8))}
+    else toast('Salvo localmente (sem sync)','warn');
+  } else {
+    diagEventId='demo-'+Date.now();
+  }
+
+  sapPayload=buildSAP(selCandidate,selAsset,diagResult.conf);
+  toast('Diagnostico confirmado — RPN atualizado');
+  goStep(4);
 }
-function buildSap(rc,asset){
-  var ca=rc.corrective_action;
+
+/* ─── Step 4: SAP ────────────────────────────────────────── */
+function buildSAP(rc,asset,conf){
+  var rpn=parseInt(rc.total_rpn||0);
   return{
-    notification:{MaintNotifType:'M2',TechnicalObject:asset.id,FunctionalLocation:asset.functional_location,NotificationText:'FTAI: '+rc.description+' — '+asset.asset_types.name,MaintNotifLongText:'FTAI ID: '+diagId+' | RPN: '+rc.total_rpn+' (S='+rc.severity+'/O='+rc.occurrence+'/D='+rc.detection+') | Score: '+rc.priority_score+' | Confianca: 87%'},
-    work_order:ca?{MaintenanceOrderType:'PM01',Equipment:asset.id,Plant:asset.plant,Priority:rc.total_rpn>=100?'1':'2',PlannedWork:ca.estimated_time_hours+'H',WorkCenter:'MANUT-ELET',
-      operations:(ca.steps||[]).map(function(s,i){return{op:String((i+1)*10).padStart(4,'0'),text:s.substring(0,50)}}),
-      components:(ca.spare_parts||[]).map(function(p,i){return{item:String(i+1).padStart(4,'0'),material:p.material,qty:p.qty,location:p.storage_loc,conditional:p.is_conditional}})}:null
+    notif:{type:'M2',equip:asset.id,fl:asset.functional_location||asset.id,plant:asset.plant||'—',
+      text:'FTAI: '+rc.root_cause+' — '+(asset.asset_types?.name||asset.id),
+      longtext:'ID: '+diagEventId+' | '+userName+' | RPN: '+rpn+' (S='+(rc.severity||'?')+'/O='+(rc.occurrence||'?')+'/D='+(rc.detection||'?')+') | Score: '+parseFloat(rc.priority_score||0).toFixed(1)+' | Conf: '+Math.round(conf*100)+'% | FTAI v2.0 InnoFactury | '+new Date().toISOString().substring(0,16)
+    },
+    wo:{type:'PM01',equip:asset.id,plant:asset.plant||'—',
+      priority:rpn>=100?'1 — ALTA':'2 — MEDIA',
+      work:(rc.estimated_time_hours||'?')+'H',center:'MANUT-ELET',
+      sop:rc.corrective_action_id||'N/A',skill:rc.skill_required||'—',
+      parts:Array.isArray(rc.spare_parts)?rc.spare_parts.join(' | '):(rc.spare_parts||'—')
+    }
   };
 }
 
-function renderStep4(){
-  if(!sapPayload){gotoStep(3);return}
-  var n=sapPayload.notification,wo=sapPayload.work_order;
+async function step4(){
+  if(!sapPayload){goStep(3);return}
+  var n=sapPayload.notif,w=sapPayload.wo;
   var el=document.getElementById('step-content');
-  el.innerHTML='<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span class="card-title" style="margin-bottom:0">Nota de Manutencao SAP PM</span><span class="tag-synced" id="sync-badge">Pronto</span></div>'+
-    [['Tipo',n.MaintNotifType],['Equipamento',n.TechnicalObject],['Local Funcional',n.FunctionalLocation],['Planta',selAsset.plant],['Texto',n.NotificationText]].map(function(x){return '<div class="sap-field"><span class="sap-key">'+x[0]+'</span><span class="sap-val">'+x[1]+'</span></div>'}).join('')+
-    '<div style="background:var(--bg3);border-radius:6px;padding:10px;font-size:11px;color:var(--muted);margin-top:10px;word-break:break-word">'+n.MaintNotifLongText+'</div></div>'+
-    (wo?'<div class="card"><div class="card-title">Ordem de Servico</div>'+
-      [['Tipo OS',wo.MaintenanceOrderType],['Equipamento',wo.Equipment],['Prioridade',wo.Priority==='1'?'ALTA':'MEDIA'],['Tempo',wo.PlannedWork],['Centro',wo.WorkCenter]].map(function(x){return '<div class="sap-field"><span class="sap-key">'+x[0]+'</span><span class="sap-val">'+x[1]+'</span></div>'}).join('')+
-      '<div class="sap-section-title" style="margin-top:12px">Operacoes</div>'+
-      wo.operations.map(function(op){return '<div class="sap-op"><div class="sap-op-head"><span style="color:var(--purple2);font-family:monospace">'+op.op+'</span></div><div class="sap-op-text">'+op.text+'</div></div>'}).join('')+
-      (wo.components.length?'<div class="sap-section-title" style="margin-top:12px">BOM — Materiais</div>'+wo.components.map(function(c){return '<div class="sap-field"><span class="sap-key" style="font-family:monospace">'+c.material+'</span><span class="sap-val">'+c.qty+'x · '+c.location+(c.conditional?' <span style="color:var(--muted);font-size:10px">(cond.)</span>':'')+'</span></div>'}).join(''):'')+'</div>':'')+
-    '<div style="padding:0 16px"><button class="btn btn-sap" id="btn-sap" onclick="syncSap()">Enviar para SAP PM →</button><button class="btn btn-reset" onclick="resetAll()">Nova Ocorrencia</button></div>';
+  el.innerHTML=
+    card('Nota de Manutencao SAP PM',
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="sap-section-title" style="margin-bottom:0">Notificacao</div><span class="ready-tag">PRONTO</span></div>'
+      +sapFields([['Tipo',n.type],['Equipamento',n.equip],['Local Func.',n.fl],['Planta',n.plant],['Texto',n.text]])
+      +'<div class="sap-longtext">'+n.longtext+'</div>'
+    )
+    +card('Ordem de Servico',
+      '<div class="sap-section-title">Parametros</div>'
+      +sapFields([['Tipo OS',w.type],['Equipamento',w.equip],['Planta',w.plant],['Prioridade','<span class="'+(w.priority.includes('ALTA')?'priority-high':'priority-med')+'">'+w.priority+'</span>'],['Tempo',w.work],['Centro',w.center],['SOP',w.sop],['Skill',w.skill],['Materiais',w.parts]])
+    )
+    +'<div class="btn-block">'
+    +'<button class="btn btn-outline-amber" id="btn-sap" onclick="syncSAP()">ENVIAR PARA SAP PM &#8594;</button>'
+    +'<button class="btn btn-ghost" onclick="newOccurrence()">NOVA OCORRENCIA</button>'
+    +'</div>';
 }
-async function syncSap(){
-  document.getElementById('btn-sap').textContent='Sincronizando…';document.getElementById('btn-sap').disabled=true;
-  await new Promise(function(r){setTimeout(r,1200)});
-  var ref='Nota:1'+Math.floor(Math.random()*90000+10000)+' OS:4'+Math.floor(Math.random()*90000+10000);
-  document.getElementById('sync-badge').textContent='✓ Synced';
-  document.getElementById('btn-sap').textContent='✓ Enviado — '+ref;
-  showToast('SAP sincronizado ✓');
+
+function sapFields(rows){
+  return rows.map(function(r){return'<div class="sap-field"><span class="sap-key">'+r[0]+'</span><span class="sap-val">'+r[1]+'</span></div>'}).join('');
 }
-function resetAll(){selAsset=null;selSymptoms.clear();diagResult=null;selCandidate=null;diagId=null;sapPayload=null;gotoStep(1)}
-function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2800)}
+
+async function syncSAP(){
+  var btn=document.getElementById('btn-sap');
+  btn.textContent='SINCRONIZANDO...';btn.disabled=true;
+  await sleep(1200);
+  var notifNum='1'+Math.floor(Math.random()*9e4+1e4);
+  var osNum='4'+Math.floor(Math.random()*9e4+1e4);
+  if(!demoMode&&sb&&diagEventId&&!diagEventId.startsWith('demo')){
+    await sb.from('diagnosis_events').update({sap_notification_number:notifNum,sap_order_number:osNum,pending_sync:false}).eq('id',diagEventId);
+  }
+  toast('SAP: Nota '+notifNum+' | OS '+osNum);
+  btn.textContent='ENVIADO — Nota '+notifNum;
+}
+
+function newOccurrence(){selAsset=null;selSyms.clear();diagResult=null;selCandidate=null;sapPayload=null;diagEventId=null;goStep(1)}
+
+/* ─── Step 5: History ────────────────────────────────────── */
+async function step5(){
+  var el=document.getElementById('step-content');
+  el.innerHTML=card('Historico de diagnosticos','<div class="loader"><div class="spin"></div><div class="loader-msg">Carregando historico...</div></div>','hist-wrap');
+  var items=D.history;
+  if(!demoMode&&sb){
+    var r=await sb.from('diagnosis_events')
+      .select('id,asset_instance_id,confirmed_root_cause_id,diagnosed_by,diagnosed_at,pending_sync,sap_notification_number,sap_order_number,confidence_score,root_causes(description)')
+      .not('confirmed_root_cause_id','is',null)
+      .order('diagnosed_at',{ascending:false}).limit(20);
+    if(r.data&&r.data.length){
+      items=r.data.map(function(d){return{
+        id:d.id.substring(0,8),asset:d.asset_instance_id,
+        cause:d.root_causes?.description||d.confirmed_root_cause_id?.substring(0,20)||'—',
+        ts:d.diagnosed_at?.substring(0,16).replace('T',' ')||'—',
+        synced:!d.pending_sync,
+        conf:d.confidence_score,
+        notif:d.sap_notification_number,os:d.sap_order_number
+      }});
+    }
+  }
+  if(!items.length){
+    document.getElementById('hist-wrap').innerHTML='<div class="empty"><div class="empty-icon">[--]</div><div class="empty-msg">Nenhum diagnostico confirmado ainda.</div></div>';
+    return;
+  }
+  document.getElementById('hist-wrap').innerHTML=items.map(function(h){
+    return '<div class="hist-item fade-up">'
+      +'<div class="hist-status" style="background:'+(h.synced?'var(--teal)':'var(--amber)')+'"></div>'
+      +'<div class="hist-info"><div class="hist-asset">'+h.asset+'</div><div class="hist-cause">'+h.cause+'</div></div>'
+      +'<div class="hist-meta">'+h.ts+(h.notif?'<br>'+h.notif:'')+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+/* ─── Utils ──────────────────────────────────────────────── */
+function card(label,body,id){
+  return '<div class="section fade-up"><div class="section-head"><span class="section-label">'+label+'</span></div><div class="section-body"'+(id?' id="'+id+'"':'')+'>'+body+'</div></div>';
+}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function toast(msg,type){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show'+(type==='warn'?' warn':'');
+  setTimeout(function(){t.classList.remove('show')},2800);
+}
 </script>
 </body>
 </html>
