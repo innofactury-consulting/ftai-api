@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTAI — Fault Tree AI · Demo</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#0f1117;--bg2:#1a1d27;--bg3:#22263a;--border:#2e3248;--purple:#7c6af7;--purple2:#9d8ff9;--teal:#1ec8a0;--amber:#f5a623;--red:#e84545;--green:#22c55e;--text:#e2e8f0;--muted:#8892aa;--radius:10px;--font:'Segoe UI',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh}
+#app{max-width:480px;margin:0 auto;padding:0 0 80px}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 20px;position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px}
+.header-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--purple),var(--teal));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+.header h1{font-size:16px;font-weight:600}
+.header span{font-size:11px;color:var(--muted);display:block;margin-top:1px}
+.demo-badge{font-size:10px;background:rgba(232,69,69,.15);color:var(--red);border:1px solid rgba(232,69,69,.3);padding:2px 8px;border-radius:10px;margin-left:auto}
+#config-banner{background:#1a1410;border:1px solid #5a3a10;border-radius:var(--radius);margin:16px 16px 0;padding:14px 16px}
+#config-banner h3{color:var(--amber);font-size:13px;margin-bottom:8px}
+.cfg-row{display:flex;gap:8px;margin-bottom:6px}
+.cfg-input{flex:1;background:#0f1117;border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:12px;font-family:monospace}
+.cfg-btn{background:var(--amber);color:#000;border:none;border-radius:6px;padding:8px 14px;font-weight:600;font-size:12px;cursor:pointer;white-space:nowrap}
+.cfg-btn:hover{opacity:.88}
+.step-nav{display:flex;gap:0;margin:16px 16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)}
+.step-btn{flex:1;padding:10px 4px;background:var(--bg2);border:none;color:var(--muted);font-size:11px;cursor:pointer;text-align:center;transition:all .15s;border-right:1px solid var(--border)}
+.step-btn:last-child{border-right:none}
+.step-btn.active{background:var(--purple);color:#fff;font-weight:600}
+.step-btn.done{color:var(--teal)}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin:12px 16px;padding:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.asset-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:all .15s}
+.asset-item:hover{border-color:var(--purple)}
+.asset-item.selected{border-color:var(--purple);background:rgba(124,106,247,0.08)}
+.asset-icon{width:38px;height:38px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.asset-info{flex:1;min-width:0}
+.asset-name{font-weight:600;font-size:13px}
+.asset-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.asset-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(30,200,160,.12);color:var(--teal);border:1px solid rgba(30,200,160,.2);white-space:nowrap}
+.symptom-group{margin-bottom:14px}
+.symptom-group-title{font-size:11px;color:var(--purple2);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.symptom-group-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.symptom-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+.symptom-chip:hover{border-color:var(--purple)}
+.symptom-chip.selected{border-color:var(--amber);background:rgba(245,166,35,.06)}
+.sym-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:all .15s}
+.symptom-chip.selected .sym-dot{background:var(--amber);border-color:var(--amber)}
+.sym-auto{font-size:10px;padding:1px 6px;background:rgba(34,197,94,.1);color:var(--green);border-radius:10px;margin-left:auto;border:1px solid rgba(34,197,94,.2);white-space:nowrap}
+.result-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.confidence-ring{width:52px;height:52px;flex-shrink:0}
+.result-meta h3{font-size:15px;font-weight:700}
+.result-meta p{font-size:11px;color:var(--muted);margin-top:2px}
+.candidate{border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.candidate:hover{border-color:var(--purple)}
+.candidate.selected{border-color:var(--teal)}
+.cand-head{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg3)}
+.cand-rank{width:24px;height:24px;border-radius:50%;background:var(--purple);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cand-rank.rank-1{background:var(--amber)}
+.cand-rank.rank-3{background:var(--muted)}
+.cand-title{flex:1;font-weight:600;font-size:13px}
+.cand-score{font-size:11px;color:var(--muted);text-align:right}
+.cand-score strong{color:var(--text);font-size:13px;display:block}
+.rpn-bars{display:flex;gap:6px;padding:10px 14px}
+.rpn-bar{flex:1}
+.rpn-label{font-size:10px;color:var(--muted);margin-bottom:3px}
+.rpn-track{height:4px;background:var(--bg);border-radius:2px;overflow:hidden}
+.rpn-fill{height:100%;border-radius:2px}
+.rpn-val{font-size:11px;font-weight:600;margin-top:2px}
+.cand-sop{padding:10px 14px;border-top:1px solid var(--border)}
+.sop-row{display:flex;justify-content:space-between;align-items:center}
+.sop-id{font-size:11px;background:rgba(124,106,247,.12);color:var(--purple2);padding:2px 8px;border-radius:4px;font-family:monospace}
+.sop-time{font-size:11px;color:var(--muted)}
+.parts-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.part-chip{font-size:10px;padding:2px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;font-family:monospace;color:var(--text)}
+.part-chip.conditional{color:var(--muted);border-style:dashed}
+.sap-section{margin-bottom:14px}
+.sap-section-title{font-size:11px;color:var(--teal);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.sap-field{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(46,50,72,.5);font-size:12px}
+.sap-field:last-child{border-bottom:none}
+.sap-key{color:var(--muted)}
+.sap-val{text-align:right;max-width:60%;word-break:break-word}
+.sap-ops{margin-top:8px}
+.sap-op{background:var(--bg3);border-radius:6px;padding:8px 10px;margin-bottom:4px}
+.sap-op-head{display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px}
+.sap-op-text{font-size:12px}
+.btn{width:100%;padding:14px;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;margin-bottom:8px}
+.btn-primary{background:var(--purple);color:#fff}
+.btn-primary:hover{background:var(--purple2)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-confirm{background:var(--teal);color:#000}
+.btn-confirm:hover{opacity:.88}
+.btn-confirm:disabled{opacity:.4;cursor:not-allowed}
+.btn-sap{background:var(--bg3);color:var(--amber);border:1px solid var(--amber)}
+.btn-sap:hover{background:rgba(245,166,35,.08)}
+.btn-sap:disabled{opacity:.5;cursor:not-allowed}
+.btn-reset{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.loader{text-align:center;padding:32px}
+.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--teal);color:var(--teal);padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.tag-synced{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25);font-size:11px;padding:3px 10px;border-radius:20px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-logo">FT</div>
+    <div><h1>FTAI Mobile</h1><span>Fault Tree Artificial Intelligence</span></div>
+    <span class="demo-badge">DEMO v1.0</span>
+  </div>
+  <div id="config-banner">
+    <h3>Conectar ao Supabase (opcional)</h3>
+    <div class="cfg-row"><input class="cfg-input" id="cfg-url" placeholder="https://xxxx.supabase.co"></div>
+    <div class="cfg-row">
+      <input class="cfg-input" id="cfg-key" placeholder="Anon Key (eyJ...)">
+      <button class="cfg-btn" onclick="connectSupabase()">Conectar</button>
+    </div>
+    <button class="cfg-btn" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);margin-top:8px;width:100%" onclick="useDemoMode()">Usar Demo Offline (dados mockados)</button>
+  </div>
+  <div class="step-nav" id="step-nav" style="display:none">
+    <button class="step-btn" id="sn-1" onclick="gotoStep(1)">1 Ativo</button>
+    <button class="step-btn" id="sn-2" onclick="gotoStep(2)">2 Sintomas</button>
+    <button class="step-btn" id="sn-3" onclick="gotoStep(3)">3 Diagnóstico</button>
+    <button class="step-btn" id="sn-4" onclick="gotoStep(4)">4 SAP</button>
+  </div>
+  <div id="step-content"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+var sb=null,step=0,selAsset=null,selSymptoms=new Set(),diagResult=null,selCandidate=null,diagId=null,sapPayload=null;
+var ICONS={'Robo Solda Spot':'Robot','Prensa Hidraulica':'Gear','AGV Logistico':'Car'};
+var MOCK={
+  assets:[
+    {id:'ROBOT_KUKA_A_001',sap_equipment_number:'10023456',functional_location:'PTA-LA-ROB-001',plant:'Planta A',line:'Linha_A',asset_types:{name:'Robo Solda Spot',manufacturer:'Kuka',model_family:'KR Agilus',modules:{name:'Automotive'}}},
+    {id:'PRENSA_SCHULER_B_001',sap_equipment_number:'10034001',functional_location:'PTB-LB-PRE-001',plant:'Planta B',line:'Linha_B',asset_types:{name:'Prensa Hidraulica',manufacturer:'Schuler',model_family:'MSC Series',modules:{name:'Automotive'}}},
+    {id:'AGV_STILL_001',sap_equipment_number:'10045001',functional_location:'PTA-WH-AGV-001',plant:'Planta A',line:'Warehouse',asset_types:{name:'AGV Logistico',manufacturer:'STILL',model_family:'LTX Series',modules:{name:'Automotive'}}}
+  ],
+  symptoms:{
+    'ROBOT_KUKA_A_001':[
+      {group:'Servomotor / Eixo 1 → Encoder',items:[
+        {id:'s001',description:'Alarme E-045 na IHM KRC4',auto_detectable:true,failure_mode:{description:'Erro de Leitura do Encoder'}},
+        {id:'s002',description:'Vibracao anormal no eixo durante movimento',auto_detectable:false,failure_mode:{description:'Erro de Leitura do Encoder'}},
+        {id:'s003',description:'Posicionamento incorreto — peca fora de tolerancia',auto_detectable:false,failure_mode:{description:'Erro de Leitura do Encoder'}},
+        {id:'s004',description:'Drift de posicao apos mastering',auto_detectable:true,failure_mode:{description:'Deriva de Zero do Encoder'}}
+      ]},
+      {group:'Servomotor / Eixo 1 → Motor',items:[
+        {id:'s005',description:'Alarme F070 — Temperatura Motor acima de 80C',auto_detectable:true,failure_mode:{description:'Superaquecimento do Motor'}},
+        {id:'s006',description:'Reducao automatica de velocidade pelo drive',auto_detectable:true,failure_mode:{description:'Superaquecimento do Motor'}}
+      ]},
+      {group:'Hidraulico → Valvula',items:[
+        {id:'s007',description:'Pinca nao mantem forca apos fechamento',auto_detectable:false,failure_mode:{description:'Vazamento na Valvula'}},
+        {id:'s008',description:'Oleo hidraulico aquecido acima de 60C',auto_detectable:true,failure_mode:{description:'Vazamento na Valvula'}}
+      ]}
+    ],
+    'PRENSA_SCHULER_B_001':[
+      {group:'Hidraulico → Bomba',items:[
+        {id:'s010',description:'Pressao abaixo de 160 bar no manometro',auto_detectable:true,failure_mode:{description:'Perda de Pressao na Bomba'}},
+        {id:'s011',description:'Ciclo de prensagem mais lento que normal',auto_detectable:false,failure_mode:{description:'Perda de Pressao na Bomba'}}
+      ]}
+    ],
+    'AGV_STILL_001':[
+      {group:'Navegacao → LiDAR',items:[
+        {id:'s020',description:'AGV para em area sem obstaculos (falso positivo)',auto_detectable:true,failure_mode:{description:'Falha no Sensor LiDAR'}}
+      ]}
+    ]
+  },
+  candidates:[
+    {id:'rc001',description:'Cabo do Encoder Interrompido (Eixo 1)',probability_weight:0.65,severity:8,occurrence:4,detection:3,total_rpn:96,priority_score:62.4,
+      corrective_action:{sop_id:'SOP-ENC-001',title:'Substituicao de Cabo Encoder – Eixo 1',estimated_time_hours:2.5,skill_required:'Eletricista Nivel II',
+        steps:['1. LOTO no painel KRC4','2. Aguardar descarga DC 5 min','3. Localizar conector X30','4. Substituir cabo CAB-ENCODER-5M','5. Reconectar X30 e verificar trava','6. Remover LOTO e energizar','7. Referenciar: Setup > Mastering','8. Testar 3 ciclos — sem alarme E-045'],
+        spare_parts:[{material:'CAB-ENCODER-5M',description:'Cabo Encoder 5m',qty:1,storage_loc:'AL01',is_conditional:false},{material:'CONN-M12-8P',description:'Conector M12',qty:2,storage_loc:'AL01',is_conditional:false}]},
+      mitigative_action:{type:'predictive',title:'Monitoramento Preditivo Encoder',description:'Alerta em 15% degradacao. Tag: VIB-AXIS1-RMS.'}},
+    {id:'rc002',description:'Encoder Desgastado / Fim de Vida Util',probability_weight:0.25,severity:8,occurrence:2,detection:3,total_rpn:48,priority_score:12.0,
+      corrective_action:{sop_id:'SOP-ENC-002',title:'Substituicao Completa Encoder',estimated_time_hours:4.0,skill_required:'Eletricista Senior + Mecanico',
+        steps:['1. LOTO + descarga DC','2. Remover protecao mecanica','3. Substituir encoder ENC-KUKA-FULL-001','4. Torquear 8 Nm','5. Mastering completo','6. Validar repeticoes ±0.04mm'],
+        spare_parts:[{material:'ENC-KUKA-FULL-001',description:'Encoder Absoluto Completo',qty:1,storage_loc:'AL01',is_conditional:false}]},mitigative_action:null},
+    {id:'rc003',description:'Conector M12 Solto / Oxidado',probability_weight:0.10,severity:8,occurrence:2,detection:2,total_rpn:32,priority_score:3.2,
+      corrective_action:{sop_id:'SOP-ENC-003',title:'Limpeza e Re-crimpagem Conector M12',estimated_time_hours:0.5,skill_required:'Tecnico Eletricista',
+        steps:['1. LOTO','2. Localizar conector M12','3. Limpar com alcool isopropilico','4. Re-crimpar se necessario','5. Testar continuidade'],
+        spare_parts:[{material:'CONN-M12-8P',description:'Conector M12',qty:1,storage_loc:'AL01',is_conditional:true}]},mitigative_action:null}
+  ]
+};
+
+function connectSupabase(){
+  var url=document.getElementById('cfg-url').value.trim(),key=document.getElementById('cfg-key').value.trim();
+  if(!url||!key){showToast('Preencha URL e Anon Key');return}
+  try{sb=supabase.createClient(url,key);document.getElementById('config-banner').style.display='none';document.getElementById('step-nav').style.display='flex';gotoStep(1);showToast('Conectado ao Supabase!')}
+  catch(e){showToast('Erro: '+e.message)}
+}
+function useDemoMode(){sb=null;document.getElementById('config-banner').style.display='none';document.getElementById('step-nav').style.display='flex';gotoStep(1);showToast('Modo demo ativo')}
+
+function gotoStep(n){
+  step=n;
+  document.querySelectorAll('.step-btn').forEach(function(b,i){b.classList.toggle('active',i+1===n);b.classList.toggle('done',i+1<n)});
+  var el=document.getElementById('step-content');el.innerHTML='';
+  if(n===1)renderStep1();else if(n===2)renderStep2();else if(n===3)renderStep3();else if(n===4)renderStep4();
+}
+
+function renderStep1(){
+  var el=document.getElementById('step-content');
+  el.innerHTML='<div class="card"><div class="card-title">Selecionar Ativo</div><div id="asset-list"><div class="loader"><div class="spinner"></div><p>Carregando…</p></div></div></div>';
+  var assets=MOCK.assets;
+  document.getElementById('asset-list').innerHTML=assets.map(function(a){
+    return '<div class="asset-item" onclick="selectAsset(\''+a.id+'\')"><div class="asset-icon">🔧</div><div class="asset-info"><div class="asset-name">'+a.id+'</div><div class="asset-sub">'+a.asset_types.manufacturer+' '+a.asset_types.model_family+' · '+a.plant+' / '+a.line+'</div></div><span class="asset-badge">'+a.asset_types.modules.name+'</span></div>';
+  }).join('');
+}
+function selectAsset(id){
+  selAsset=MOCK.assets.find(function(a){return a.id===id});
+  selSymptoms.clear();setTimeout(function(){gotoStep(2)},200);
+}
+
+function renderStep2(){
+  if(!selAsset){gotoStep(1);return}
+  var el=document.getElementById('step-content');
+  el.innerHTML='<div class="card"><div class="card-title">Ativo: '+selAsset.id+'</div><div id="symptom-list"></div></div><div style="padding:0 16px"><button class="btn btn-primary" id="btn-diag" onclick="runDiagnosis()" disabled>Analisar com FTAI</button><button class="btn btn-reset" onclick="gotoStep(1)">← Voltar</button></div>';
+  var groups=MOCK.symptoms[selAsset.id]||[];
+  document.getElementById('symptom-list').innerHTML=groups.map(function(g){
+    return '<div class="symptom-group"><div class="symptom-group-title">'+g.group+'</div>'+
+      g.items.map(function(s){
+        return '<div class="symptom-chip" id="sc-'+s.id+'" onclick="toggleSym(\''+s.id+'\')"><div class="sym-dot"></div><div style="flex:1"><div>'+s.description+'</div><div style="font-size:10px;color:var(--muted)">'+s.failure_mode.description+'</div></div>'+(s.auto_detectable?'<span class="sym-auto">AUTO</span>':'')+'</div>';
+      }).join('')+'</div>';
+  }).join('');
+}
+function toggleSym(id){
+  if(selSymptoms.has(id))selSymptoms.delete(id);else selSymptoms.add(id);
+  var c=document.getElementById('sc-'+id);if(c)c.classList.toggle('selected',selSymptoms.has(id));
+  var btn=document.getElementById('btn-diag');if(btn){btn.disabled=selSymptoms.size===0;btn.textContent=selSymptoms.size>0?'Analisar '+selSymptoms.size+' sintoma(s) →':'Analisar com FTAI'}
+}
+
+async function runDiagnosis(){
+  if(selSymptoms.size===0)return;
+  document.getElementById('step-content').innerHTML='<div class="loader" style="padding:60px 20px"><div class="spinner"></div><p style="color:var(--purple2);font-weight:600">FTAI analisando '+selSymptoms.size+' sintoma(s)…</p><p style="color:var(--muted);font-size:12px;margin-top:4px">Percorrendo grafo de falhas · RPN × probabilidade</p></div>';
+  await new Promise(function(r){setTimeout(r,900)});
+  diagResult={confidence_score:0.87,matched_symptom_count:selSymptoms.size,candidates:MOCK.candidates};
+  diagId='demo-'+Date.now();
+  gotoStep(3);
+}
+
+function renderStep3(){
+  if(!diagResult){gotoStep(2);return}
+  var conf=Math.round(diagResult.confidence_score*100);
+  var clr=conf>=80?'var(--teal)':conf>=60?'var(--amber)':'var(--red)';
+  var el=document.getElementById('step-content');
+  el.innerHTML='<div class="card"><div class="result-header"><svg class="confidence-ring" viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" fill="none" stroke="#22263a" stroke-width="4"/><circle cx="26" cy="26" r="22" fill="none" stroke="'+clr+'" stroke-width="4" stroke-dasharray="'+(2*Math.PI*22)+'" stroke-dashoffset="'+(2*Math.PI*22*(1-conf/100))+'" transform="rotate(-90 26 26)" stroke-linecap="round"/><text x="26" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="'+clr+'">'+conf+'%</text></svg><div class="result-meta"><h3>FTAI Diagnostico Concluido</h3><p>'+diagResult.candidates.length+' causa(s) raiz · '+diagResult.matched_symptom_count+' sintoma(s)</p></div></div><div id="cands"></div></div><div style="padding:0 16px"><button class="btn btn-confirm" id="btn-conf" onclick="confirmDiag()" disabled>Confirmar Diagnostico Selecionado</button><button class="btn btn-reset" onclick="gotoStep(2)">← Rever sintomas</button></div>';
+  var cEl=document.getElementById('cands');
+  cEl.innerHTML=diagResult.candidates.map(function(c,i){
+    var sop=c.corrective_action;var parts=(sop&&sop.spare_parts)||[];
+    var rankClr=i===0?'var(--amber)':i===1?'var(--purple)':'var(--muted)';
+    return '<div class="candidate" id="cand-'+i+'" onclick="selCand('+i+')">'+
+      '<div class="cand-head"><div class="cand-rank rank-'+(i+1)+'" style="background:'+rankClr+'">'+(i+1)+'</div><div class="cand-title">'+c.description+'</div><div class="cand-score"><strong>'+c.priority_score+'</strong>score</div></div>'+
+      '<div class="rpn-bars">'+
+        [['S',c.severity,'var(--red)'],['O',c.occurrence,'var(--amber)'],['D',c.detection,'var(--purple)'],['RPN',c.total_rpn,'var(--teal)'],['P',Math.round(c.probability_weight*100),'var(--purple2)']].map(function(x){
+          var maxVal=x[0]==='RPN'?1000:x[0]==='P'?100:10;
+          return '<div class="rpn-bar"><div class="rpn-label">'+x[0]+'</div><div class="rpn-track"><div class="rpn-fill" style="width:'+Math.min(100,x[1]/maxVal*100)+'%;background:'+x[2]+'"></div></div><div class="rpn-val" style="color:'+x[2]+'">'+x[1]+(x[0]==='P'?'%':'')+'</div></div>';
+        }).join('')+
+      '</div>'+
+      (sop?'<div class="cand-sop"><div class="sop-row"><span class="sop-id">'+sop.sop_id+'</span><span class="sop-time">⏱ '+sop.estimated_time_hours+'h · '+sop.skill_required+'</span></div>'+(parts.length>0?'<div class="parts-row">'+parts.map(function(p){return '<span class="part-chip'+(p.is_conditional?' conditional':'')+'">'+p.material+' x'+p.qty+(p.is_conditional?' (cond.)':'')+'</span>'}).join('')+'</div>':'')+'</div>':'')+
+    '</div>';
+  }).join('');
+}
+function selCand(i){
+  selCandidate=diagResult.candidates[i];
+  document.querySelectorAll('.candidate').forEach(function(el,j){el.classList.toggle('selected',j===i)});
+  var btn=document.getElementById('btn-conf');if(btn)btn.disabled=false;
+}
+async function confirmDiag(){
+  if(!selCandidate)return;
+  var btn=document.getElementById('btn-conf');btn.textContent='Confirmando…';btn.disabled=true;
+  await new Promise(function(r){setTimeout(r,700)});
+  sapPayload=buildSap(selCandidate,selAsset);
+  showToast('Confirmado! RPN atualizado ✓');gotoStep(4);
+}
+function buildSap(rc,asset){
+  var ca=rc.corrective_action;
+  return{
+    notification:{MaintNotifType:'M2',TechnicalObject:asset.id,FunctionalLocation:asset.functional_location,NotificationText:'FTAI: '+rc.description+' — '+asset.asset_types.name,MaintNotifLongText:'FTAI ID: '+diagId+' | RPN: '+rc.total_rpn+' (S='+rc.severity+'/O='+rc.occurrence+'/D='+rc.detection+') | Score: '+rc.priority_score+' | Confianca: 87%'},
+    work_order:ca?{MaintenanceOrderType:'PM01',Equipment:asset.id,Plant:asset.plant,Priority:rc.total_rpn>=100?'1':'2',PlannedWork:ca.estimated_time_hours+'H',WorkCenter:'MANUT-ELET',
+      operations:(ca.steps||[]).map(function(s,i){return{op:String((i+1)*10).padStart(4,'0'),text:s.substring(0,50)}}),
+      components:(ca.spare_parts||[]).map(function(p,i){return{item:String(i+1).padStart(4,'0'),material:p.material,qty:p.qty,location:p.storage_loc,conditional:p.is_conditional}})}:null
+  };
+}
+
+function renderStep4(){
+  if(!sapPayload){gotoStep(3);return}
+  var n=sapPayload.notification,wo=sapPayload.work_order;
+  var el=document.getElementById('step-content');
+  el.innerHTML='<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span class="card-title" style="margin-bottom:0">Nota de Manutencao SAP PM</span><span class="tag-synced" id="sync-badge">Pronto</span></div>'+
+    [['Tipo',n.MaintNotifType],['Equipamento',n.TechnicalObject],['Local Funcional',n.FunctionalLocation],['Planta',selAsset.plant],['Texto',n.NotificationText]].map(function(x){return '<div class="sap-field"><span class="sap-key">'+x[0]+'</span><span class="sap-val">'+x[1]+'</span></div>'}).join('')+
+    '<div style="background:var(--bg3);border-radius:6px;padding:10px;font-size:11px;color:var(--muted);margin-top:10px;word-break:break-word">'+n.MaintNotifLongText+'</div></div>'+
+    (wo?'<div class="card"><div class="card-title">Ordem de Servico</div>'+
+      [['Tipo OS',wo.MaintenanceOrderType],['Equipamento',wo.Equipment],['Prioridade',wo.Priority==='1'?'ALTA':'MEDIA'],['Tempo',wo.PlannedWork],['Centro',wo.WorkCenter]].map(function(x){return '<div class="sap-field"><span class="sap-key">'+x[0]+'</span><span class="sap-val">'+x[1]+'</span></div>'}).join('')+
+      '<div class="sap-section-title" style="margin-top:12px">Operacoes</div>'+
+      wo.operations.map(function(op){return '<div class="sap-op"><div class="sap-op-head"><span style="color:var(--purple2);font-family:monospace">'+op.op+'</span></div><div class="sap-op-text">'+op.text+'</div></div>'}).join('')+
+      (wo.components.length?'<div class="sap-section-title" style="margin-top:12px">BOM — Materiais</div>'+wo.components.map(function(c){return '<div class="sap-field"><span class="sap-key" style="font-family:monospace">'+c.material+'</span><span class="sap-val">'+c.qty+'x · '+c.location+(c.conditional?' <span style="color:var(--muted);font-size:10px">(cond.)</span>':'')+'</span></div>'}).join(''):'')+'</div>':'')+
+    '<div style="padding:0 16px"><button class="btn btn-sap" id="btn-sap" onclick="syncSap()">Enviar para SAP PM →</button><button class="btn btn-reset" onclick="resetAll()">Nova Ocorrencia</button></div>';
+}
+async function syncSap(){
+  document.getElementById('btn-sap').textContent='Sincronizando…';document.getElementById('btn-sap').disabled=true;
+  await new Promise(function(r){setTimeout(r,1200)});
+  var ref='Nota:1'+Math.floor(Math.random()*90000+10000)+' OS:4'+Math.floor(Math.random()*90000+10000);
+  document.getElementById('sync-badge').textContent='✓ Synced';
+  document.getElementById('btn-sap').textContent='✓ Enviado — '+ref;
+  showToast('SAP sincronizado ✓');
+}
+function resetAll(){selAsset=null;selSymptoms.clear();diagResult=null;selCandidate=null;diagId=null;sapPayload=null;gotoStep(1)}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2800)}
+</script>
+</body>
+</html>
